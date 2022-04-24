@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="BasciAnnotation">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/BasciAnnotation.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/BasciAnnotation.jar!/" />
+    </SOURCES>
+  </library>
+</component>

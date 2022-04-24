@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="MailSupportution">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Android/Properties/out/artifacts/MailSupportution_jar/MailSupportution.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
