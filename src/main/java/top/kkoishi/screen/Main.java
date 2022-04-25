@@ -18,11 +18,9 @@ import top.kkoishi.ser.lang.IllegalSerializationTypeException;
 import top.kkoishi.util.KoishiLogger;
 
 import javax.imageio.ImageIO;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
+import javax.mail.*;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.swing.*;
 import java.awt.AWTException;
 import java.awt.Rectangle;
@@ -183,11 +181,18 @@ public class Main {
             transport.connect(from, passCode);
             final Message msg = MessageBuilder.builder(SESSION, "image")
                     .append(Message.RecipientType.TO, getProc("mail", "receiver"))
-                    .setRoot(MessageBodyManager.mix(MessageBodyManager.attachment(src)))
+                    .setRoot(MessageBodyManager.mix(MessageBodyManager.attachment(src),
+                            getPlainText(getProc("mail", "content"))))
                     .setSubject(getProc("mail", "subject")).build();
             msg.setFrom(new InternetAddress(from));
             transport.sendMessage(msg, msg.getAllRecipients());
         }
+    }
+
+    private static BodyPart getPlainText (String content) throws MessagingException {
+        final BodyPart part = new MimeBodyPart();
+        part.setText(content);
+        return part;
     }
 
     public static String getProc (String sectionName, String key) {
