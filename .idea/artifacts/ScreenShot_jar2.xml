@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact name="ScreenShot:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/ScreenShot_jar2</output-path>
+    <root id="root">
+      <element id="archive" name="ScreenShot.jar">
+        <element id="module-output" name="ScreenShot" />
+        <element id="module-test-output" name="ScreenShot" />
+      </element>
+      <element id="library" level="project" name="MailSupportution" />
+      <element id="library" level="project" name="Properties" />
+      <element id="library" level="project" name="Ser" />
+      <element id="library" level="project" name="SimpleApi" />
+      <element id="library" level="project" name="BasciAnnotation" />
+    </root>
+  </artifact>
+</component>

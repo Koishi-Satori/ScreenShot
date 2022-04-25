@@ -23,7 +23,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
-import javax.swing.JFrame;
+import javax.swing.*;
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -39,20 +39,27 @@ import java.util.NoSuchElementException;
 public class Main {
 
     private static final int CLOSE_FRAME = 0;
+
     private static final int SHOW_FRAME = 1;
+
     private static final int SCREEN_SHOT = 2;
+
     private static final int SETTINGS = 3;
+
+    private static final String USER_HOME = System.getProperty("user.home");
+
     private static String passCode = null;
 
     private static final INIPropertiesLoader LOADER = new INIPropertiesLoader();
 
     public static Robot robot;
 
-    public static String imageDir = System.getProperty("user.home") + "/Pictures/";
+    public static String imageDir = USER_HOME + "/Pictures/";
 
     private static final Session SESSION = MessageBuilder.getSession(true, "smtp", "smtp.qq.com");
 
     static {
+        InitialDispaly.getInstance().setFocusable(true);
         //use KKoishi Logger.
         KoishiLogger.errFile = "./error.log";
         KoishiLogger.outFile = "./output.log";
@@ -63,7 +70,7 @@ public class Main {
         System.setErr(err);
         System.setOut(out);
 
-        SESSION.setDebug(true);
+        SESSION.setDebug(false);
         try {
             passCode = getString(Builder.arraySupport(Character.class).buildArray(Files.readRaw("./data/assignmentCode.kkoishi")));
             LOADER.loadUtf(new File("./data/proc.ini"));
@@ -82,12 +89,31 @@ public class Main {
     }
 
     public static void main (String[] args) {
+        final File dir = new File(System.getProperty("user.home") + getProc("files", "file_store_path") + '/');
+        if (dir.exists()) {
+            imageDir = dir.getAbsolutePath();
+            System.out.println("Redirect out to:" + imageDir);
+        } else {
+            System.out.println("Attempt to create target directory:" + dir);
+            if (dir.mkdirs()) {
+                imageDir = dir.getAbsolutePath();
+            } else {
+                JOptionPane.showMessageDialog(null, "Failed to initial target directory:" + dir);
+                System.exit(514);
+            }
+        }
         HookManager.register(CLOSE_FRAME, JIntellitype.MOD_SHIFT + JIntellitype.MOD_CONTROL, KeyEvent.VK_HOME);
         HookManager.register(SHOW_FRAME, JIntellitype.MOD_ALT + JIntellitype.MOD_CONTROL, KeyEvent.VK_P);
         HookManager.register(SCREEN_SHOT, JIntellitype.MOD_CONTROL + JIntellitype.MOD_SHIFT, KeyEvent.VK_O);
         HookManager.register(SETTINGS, JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT + JIntellitype.MOD_SHIFT, KeyEvent.VK_U);
         final HookScreenListener listener = new HookScreenListener();
         HookManager.addListener(listener);
+        try {
+            Thread.sleep(700);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        InitialDispaly.clearDisplay();
 //        final Serializer serializer = new Serializer("sjvbvfuidwmojhjb".toCharArray());
 //        final var bits = serializer.serialize().buildAndClose();
 //        final FileOutputStream fos = new FileOutputStream("./data/assignmentCode.kkoishi");
@@ -109,27 +135,13 @@ public class Main {
         public void onHotKey (int i) {
             switch (i) {
                 case CLOSE_FRAME:
-                    f.dispose();
-                    f.toBack();
-                    f.setExtendedState(JFrame.NORMAL);
+                    f.reset();
                     break;
                 case SHOW_FRAME:
                     f.setVisible(true);
                     break;
                 case SCREEN_SHOT:
-                    System.out.println("Start capture screen.");
-                    final var img = robot.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
-                    try {
-                        final File imgFile = new File(imageDir +
-                                getProc("files", "file_name_head")
-                                + System.currentTimeMillis() +
-                                getProc("files", "file_name_end")
-                                + "." + getProc("files", "file_store_type"));
-                        System.out.println("State:" + ImageIO.write(img, getProc("files", "file_store_type"), imgFile));
-                        sendImage(imgFile);
-                    } catch (IOException | MessagingException e) {
-                        e.printStackTrace();
-                    }
+                    captureScreen(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
                     break;
                 case SETTINGS:
                     final SettingFrame sf = new SettingFrame();
@@ -139,6 +151,25 @@ public class Main {
                     uoe();
                     break;
             }
+        }
+    }
+
+    static void captureScreen (Rectangle size) {
+        System.out.println("Start capture screen.");
+        final var img = robot.createScreenCapture(size);
+        try {
+            final File imgFile = new File(imageDir + "/" +
+                    getProc("files", "file_name_head")
+                    + System.currentTimeMillis() +
+                    getProc("files", "file_name_end")
+                    + "." + getProc("files", "file_store_type"));
+            System.out.println("State:" + ImageIO.write(img, getProc("files", "file_store_type"), imgFile));
+            sendImage(imgFile);
+        } catch (IOException | MessagingException e) {
+            e.printStackTrace();
+        } finally {
+            System.gc();
+            System.runFinalization();
         }
     }
 

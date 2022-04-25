@@ -1,7 +1,7 @@
 package top.kkoishi.screen;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import java.awt.HeadlessException;
 
 /**
  * @author KKoishi_
