@@ -1,11 +1,16 @@
 package top.kkoishi.screen;
 
+import top.kkoishi.concurrent.DefaultThreadFactory;
+import top.kkoishi.swing.JVMStateDisplay;
+
 import javax.swing.*;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author KKoishi_
@@ -18,7 +23,18 @@ public final class ScreenFrame extends Frame implements MouseInputListener, KeyL
 
     private final Rectangle rectangle = new Rectangle(getToolkit().getScreenSize());
 
+    private final JPopupMenu popupMenu = new JPopupMenu();
+
     public ScreenFrame () throws HeadlessException {
+        setTitle("ScreenShotTool_by_KKoishi_");
+        final var mem = new JVMStateDisplay();
+        final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1, new DefaultThreadFactory());
+        pool.scheduleAtFixedRate(mem.get(), 0, 30, TimeUnit.MILLISECONDS);
+        popupMenu.add(mem);
+        popupMenu.add("Press 'Ctrl+Shift+O' to capture the whole screen.");
+        popupMenu.add("Press 'Ctrl+Alt+P' to select capture size.");
+        popupMenu.add("Press 'Esc' to exit selection and 'Enter' to capture while selecting.");
+        popupMenu.add("Press 'Ctrl+Shift+Home' to close me.");
         setBackground(new Color(0, 0, 0));
         setSize(rectangle.getSize());
         p1 = new Point(0, 0);
@@ -41,7 +57,7 @@ public final class ScreenFrame extends Frame implements MouseInputListener, KeyL
     @Override
     public void mouseDragged (MouseEvent e) {
         super.getGraphics().clearRect(0, 0, getWidth(), getHeight());
-        p2 = getMousePosition();
+        p2 = e.getPoint();
         rectangle.width = StrictMath.abs(p2.x - p1.x);
         rectangle.height = StrictMath.abs(p2.y - p1.y);
         drawRectOnScreen();
@@ -57,8 +73,13 @@ public final class ScreenFrame extends Frame implements MouseInputListener, KeyL
 
     @Override
     public void mousePressed (MouseEvent e) {
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            popupMenu.show(this, e.getX(), e.getY());
+            return;
+        }
         super.getGraphics().clearRect(0, 0, getWidth(), getHeight());
         p1 = getMousePosition();
+        p2 = p1;
         rectangle.setLocation(p1);
         drawRectOnScreen();
     }
@@ -114,11 +135,11 @@ public final class ScreenFrame extends Frame implements MouseInputListener, KeyL
                     break;
                 }
             }
-            case KeyEvent.VK_ESCAPE:{
+            case KeyEvent.VK_ESCAPE: {
                 reset();
                 break;
             }
-            default:{
+            default: {
                 break;
             }
         }

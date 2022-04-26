@@ -29,6 +29,7 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 
 /**
@@ -76,6 +77,7 @@ public class Main {
                 NoSuchFieldException | IllegalAccessException | InstantiationException | IOException | TokenizeException
                 | BuildFailedException | LoaderException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null, e.getMessage());
             System.exit(114514);
         }
         try {
@@ -100,10 +102,26 @@ public class Main {
                 System.exit(514);
             }
         }
+        try {
+            if (Boolean.parseBoolean(getProc("frame", "initial"))) {
+                InitialDispaly.clearDisplay();
+                reinitialize();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            System.exit(1919810);
+        }
         HookManager.register(CLOSE_FRAME, JIntellitype.MOD_SHIFT + JIntellitype.MOD_CONTROL, KeyEvent.VK_HOME);
         HookManager.register(SHOW_FRAME, JIntellitype.MOD_ALT + JIntellitype.MOD_CONTROL, KeyEvent.VK_P);
         HookManager.register(SCREEN_SHOT, JIntellitype.MOD_CONTROL + JIntellitype.MOD_SHIFT, KeyEvent.VK_O);
+        //Ctrl + Alt + Shift + U to open settings
         HookManager.register(SETTINGS, JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT + JIntellitype.MOD_SHIFT, KeyEvent.VK_U);
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
         final HookScreenListener listener = new HookScreenListener();
         HookManager.addListener(listener);
         try {
@@ -126,14 +144,17 @@ public class Main {
 
         private final ScreenFrame f = new ScreenFrame();
 
+        private final SettingFrame sf;
+
         public HookScreenListener () {
+            sf = new SettingFrame();
         }
 
         @Override
         public void onHotKey (int i) {
             switch (i) {
                 case CLOSE_FRAME:
-                    f.reset();
+                    System.exit(0);
                     break;
                 case SHOW_FRAME:
                     f.setVisible(true);
@@ -142,7 +163,6 @@ public class Main {
                     captureScreen(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
                     break;
                 case SETTINGS:
-                    final SettingFrame sf = new SettingFrame();
                     sf.setVisible(true);
                     break;
                 default:
@@ -175,6 +195,23 @@ public class Main {
         throw new UnsupportedOperationException();
     }
 
+    private static void reinitialize () {
+        final String address = JOptionPane.showInputDialog(null,
+                "Input your email:", "Email input", JOptionPane.QUESTION_MESSAGE);
+        if (address == null) {
+            JOptionPane.showMessageDialog(null, "The email can not be empty!");
+            reinitialize();
+        } else {
+            if (writeProc("mail", "receiver", address) &&
+                    writeProc("frame", "initial", "false")) {
+                System.out.println("Access.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Failed to write the proc!");
+                System.exit(0X5C);
+            }
+        }
+    }
+
     private static void sendImage (File src) throws MessagingException, IOException {
         try (Transport transport = SESSION.getTransport()) {
             final String from = getProc("mail", "provider");
@@ -197,12 +234,48 @@ public class Main {
 
     public static String getProc (String sectionName, String key) {
         final Section section = LOADER.get(sectionName);
+        if (section == null) {
+            JOptionPane.showMessageDialog(null,
+                    "The section:" + sectionName + " does not exists!(This should not happen)");
+            System.exit(114514);
+        }
         for (Section.INIEntry entry : section.entries) {
             if (entry.getKey().equals(key)) {
                 return entry.getValue();
             }
         }
-        throw new NoSuchElementException();
+        JOptionPane.showMessageDialog(null,
+                "The section[" + sectionName + "] does not has the key:" +
+                        key + "!(This should not happen)");
+        System.exit(114514);
+        return null;
+    }
+
+    public static boolean writeProc (String sectionName, String key, String nValue) {
+        final Section section = LOADER.get(sectionName);
+        if (section == null) {
+            JOptionPane.showMessageDialog(null,
+                    "The section:" + sectionName + " does not exists!(This should not happen)");
+            System.exit(114514);
+        }
+        int index = 0;
+        for (final Section.INIEntry entry : section.entries) {
+            if (entry.getKey().equals(key)) {
+                entry.setValue(nValue);
+                section.entries.set(index, entry);
+                LOADER.replace(sectionName, section);
+                try {
+                    LOADER.store(new File("./data/proc.ini"), StandardCharsets.UTF_8);
+                } catch (LoaderException | IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(null, e.getMessage());
+                    System.exit(1919810);
+                }
+                return true;
+            }
+            ++index;
+        }
+        return false;
     }
 
     private static String getString (Character[] cs) {

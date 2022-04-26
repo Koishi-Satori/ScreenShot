@@ -18,6 +18,9 @@ public final class InitialDispaly extends JFrame {
     }
 
     public static void clearDisplay () {
+        if (instance == null) {
+            return;
+        }
         instance.removeAll();
         instance.dispose();
         instance = null;
